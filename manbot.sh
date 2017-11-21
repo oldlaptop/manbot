@@ -21,7 +21,7 @@ printman ()
 
 		if (whatis -s $section $name > /dev/null)
 		then
-			writeout "$(whatis -s $section $name 2>&1 | sed 1q) - https://man.openbsd.org/$name.$section"
+			writeout "$(whatis -s $section $name 2>&1 | grep ^$name\($section\)\ \-) - https://man.openbsd.org/$name.$section"
 		else
 			writeout "no such thing as $name($section)"
 		fi
