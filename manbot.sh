@@ -11,11 +11,11 @@ writeout ()
 
 printman ()
 {
-	names=$(echo "$1" | grep -Eo '([[:alnum:]]+\([0-9][[:lower:]]?\))')
+	names=$(echo "$1" | grep -Eo '([[:alnum:]\-_:]+\([[:digit:]][[:lower:]]?\))')
 	for fullname in $names
 	do
 		name=${fullname%\(*\)}
-                section=$(echo $fullname | grep -Eo [0-9][[:lower:]]?)
+                section=$(echo $fullname | grep -Eo [[:digit:]][[:lower:]]?)
 
 		if (whatis -s $section $name > /dev/null)
 		then
@@ -40,7 +40,7 @@ do
 
 	# Sanitize input
 	set -f
-	set -- $(printf "%s" "${LINE}" | tr -cd '[:alnum:]() ')
+	set -- $(printf "%s" "${LINE}" | tr -cd '[:alnum:]()\-_: ')
 	set +f
 
 	# Parse input
@@ -52,7 +52,7 @@ do
 	MSG="${allargs##"${DATE} ${TIME} ${NICK}"}"
 
 	# if message contains a manpage reference and is not from the bot
-	if [ "${NICK}" != "${MYNICK}" ] && echo ${MSG} | grep -Eq '([[:alnum:]]+\([0-9][[:lower:]]?\))'
+	if [ "${NICK}" != "${MYNICK}" ] && echo ${MSG} | grep -Eq '([[:alnum:]\-_:]+\([0-9][[:lower:]]?\))'
 	then                              # quotes around ${MSG} break it
 		printman "${MSG}"
 	fi
