@@ -15,7 +15,9 @@ printman ()
 	for fullname in $names
 	do
 		name=${fullname%\(*\)}
-                section=$(echo $fullname | grep -Eo [[:digit:]][[:lower:]]?)
+		section=$(echo $fullname | grep -Eo '\([[:digit:]][[:lower:]]?\)')
+		section=${section#\(}
+		section=${section%\)}
 
 		if (whatis -s $section $name > /dev/null)
 		then
