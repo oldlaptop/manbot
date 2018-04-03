@@ -12,6 +12,7 @@ writeout ()
 printman ()
 {
 	names=$(echo "$1" | grep -Eo '([[:alnum:]\-_:]+\([[:digit:]][[:lower:]]?\))')
+	out=
 	for fullname in $names
 	do
 		name=${fullname%\(*\)}
@@ -21,11 +22,12 @@ printman ()
 
 		if (whatis -s $section $name > /dev/null)
 		then
-			writeout "$(whatis -s $section $name 2>&1 | grep ^$name\($section\)\ \-) - https://man.openbsd.org/$name.$section"
+			out="${out:+${out}; }$name($section) $(whatis -s $section $name 2>&1 | grep "^$name[(, ]" | grep -o '\- .*$') - https://man.openbsd.org/$name.$section"
 		else
-			writeout "no such thing as $name($section)"
+			out="${out:+${out}; }no such thing as $name($section)"
 		fi
 	done
+	writeout "$out"
 }
 
 # Main event loop
@@ -57,6 +59,7 @@ do
 	if [ "${NICK}" != "${MYNICK}" ] && echo ${MSG} | grep -Eq '([[:alnum:]\-_:]+\([0-9][[:lower:]]?\))'
 	then                              # quotes around ${MSG} break it
 		printman "${MSG}"
+		sleep 5
 	fi
 
 done
