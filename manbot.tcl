@@ -2,6 +2,9 @@
 
 package require Tcl 8.5
 
+# Base URL of the man.cgi(8) instance to use
+set BASE_URL "https://man.openbsd.org"
+
 # Passed to whatis -M
 set MANPATH "/usr/ports/infrastructure/man:/usr/X11R6/man:/usr/share/man"
 
@@ -80,20 +83,23 @@ proc writeout {msg {nick ""}} {
 }
 
 proc printman {msg {nick ""}} {
+	global BASE_URL
 	global MANPATH
-	set pages [regexp -inline -all {[[:alnum:]\-_:]+\([[:digit:]][[:lower:]]?\)} $msg]
+	set pages [regexp -inline -all {[[:alnum:]\-_:\.]+\([[:digit:]][[:lower:]]?\)} $msg]
 	foreach page $pages {
-		regexp {[[:alnum:]\-_:]+} $page name
+		regexp {[[:alnum:]\-_:\.]+} $page name
 
 		# We are only interested in what matches the subexpression,
 		# inside the parens.
 		regexp {\(([[:digit:]][[:lower:]]?)\)} $page dummy section
 
-		if {[catch {exec -keepnewline whatis -M $MANPATH -s $section $name} out]} {
+		if {$name == "manbot"} {
+			writeout "manbot(1) - babble about manpages on IRC - https://github.com/oldlaptop/manbot"
+		} elseif {[catch {exec -keepnewline whatis -M $MANPATH -s $section $name} out]} {
 			writeout "no such thing as ${name}($section)" $nick
 		} else {
 			set descr [regexp -inline [string cat $name {[[:graph:][:blank:]]*\n}] $out]
-			writeout "[string range [lindex $descr 0] 0 end-1] - https://man.openbsd.org/$name.$section" $nick
+			writeout "[string range [lindex $descr 0] 0 end-1] - $BASE_URL/$name.$section" $nick
 		}
 		
 	}
