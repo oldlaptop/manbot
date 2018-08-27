@@ -19,6 +19,12 @@ set TIMEOUT 60
 # The number of messages permitted during a ratelimiting period.
 set MAXMSG 4
 
+# Time to wait before autorejoining when kicked
+set AUTOREJOIN_PERIOD 10
+
+# The "nick" used by ii for system messages; shouldn't change, really...
+set SYS_NICK "-!-"
+
 # Sends msg to stdout, reformatted for IRC. If nick is non-empty, invokes rate-
 # limiting logic.
 proc writeout {msg {nick ""}} {
@@ -42,6 +48,7 @@ proc writeout {msg {nick ""}} {
 	}
 
 	if {$nick != ""} {
+		# Print with ratelimiting
 		global nickdb
 		global TIMEOUT
 		global MAXMSG
@@ -68,6 +75,7 @@ proc writeout {msg {nick ""}} {
 		dict set nickdb $nick $nickentry
 		puts $nickdb
 	} else {
+		# Print without ratelimiting
 		puts -nonewline [fold $msg]
 	}
 }
@@ -90,3 +98,39 @@ proc printman {msg {nick ""}} {
 		
 	}
 }
+
+# Boring utility command, surprised it isn't built in
+proc sleep {nsec} {
+	after [expr $nsec * 1000] set awake 1
+	vwait awake
+}
+
+puts :)
+while {[gets stdin line] >= 0} {
+	global AUTOREJOIN_PERIOD
+	global SYS_NICK
+
+	# Messages are formatted like so:
+	# 2018-06-19 14:50 <oldlaptop> ls(1) man(1) file(1) printf(3) [...]
+	# We are mainly interested in the nickname and the actual message for
+	# now, but we might as well store the rest of it while we're parsing.
+	set enddate [string first " " $line]
+	set endmtim [string first " " $line [expr $enddate + 1]]
+	set endnick [string first " " $line [expr $endmtim + 1]]
+	set date [string range $line 0 [expr $enddate - 1]]
+	set mtim [string range $line [expr $enddate + 1] [expr $endmtim - 1]]
+	set nick [string range $line [expr $endmtim + 1] [expr $endnick - 1]]
+	set msg [string range $line [expr $endnick + 1] end]
+
+	if {$nick != $env(MYNICK) &&
+	    [regexp {[[:alnum:]\-_:]+\([0-9][[:lower:]]?\)} $msg]} {
+		printman $msg $nick
+	}
+
+	if {$nick == $SYS_NICK && [regexp [string cat {kicked } $env(MYNICK)] $msg]} {
+		# oh no, we've been kicked!
+		sleep $AUTOREJOIN_PERIOD
+		puts "/j"
+	}
+}
+puts :(
