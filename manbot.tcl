@@ -73,7 +73,6 @@ proc writeout {msg {nick ""}} {
 
 		# Commit any changes to the global ratelimiting db
 		dict set nickdb $nick $nickentry
-		puts $nickdb
 	} else {
 		# Print without ratelimiting
 		puts -nonewline [fold $msg]
@@ -93,7 +92,8 @@ proc printman {msg {nick ""}} {
 		if {[catch {exec whatis -M $MANPATH -s $section $name} out]} {
 			writeout "no such thing as ${name}($section)" $nick
 		} else {
-			writeout "$out - https://man.openbsd.org/$name.$section" $nick
+			set descr [regexp -inline [string cat $name {[[:alnum:][:blank:][:punct:]]*-}] $out]
+			writeout "[lindex $descr 0] https://man.openbsd.org/$name.$section" $nick
 		}
 		
 	}
@@ -110,6 +110,9 @@ while {[gets stdin line] >= 0} {
 	global AUTOREJOIN_PERIOD
 	global SYS_NICK
 
+	# Would rather not bother stripping <> off
+	set mynick [string cat "<" $env(MYNICK) ">"]
+
 	# Messages are formatted like so:
 	# 2018-06-19 14:50 <oldlaptop> ls(1) man(1) file(1) printf(3) [...]
 	# We are mainly interested in the nickname and the actual message for
@@ -122,12 +125,12 @@ while {[gets stdin line] >= 0} {
 	set nick [string range $line [expr $endmtim + 1] [expr $endnick - 1]]
 	set msg [string range $line [expr $endnick + 1] end]
 
-	if {$nick != $env(MYNICK) &&
+	if {$nick != $mynick &&
 	    [regexp {[[:alnum:]\-_:]+\([0-9][[:lower:]]?\)} $msg]} {
 		printman $msg $nick
 	}
 
-	if {$nick == $SYS_NICK && [regexp [string cat {kicked } $env(MYNICK)] $msg]} {
+	if {$nick == $SYS_NICK && [regexp [string cat {kicked } $mynick] $msg]} {
 		# oh no, we've been kicked!
 		sleep $AUTOREJOIN_PERIOD
 		puts "/j"
