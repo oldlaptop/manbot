@@ -89,11 +89,11 @@ proc printman {msg {nick ""}} {
 		# inside the parens.
 		regexp {\(([[:digit:]][[:lower:]]?)\)} $page dummy section
 
-		if {[catch {exec whatis -M $MANPATH -s $section $name} out]} {
+		if {[catch {exec -keepnewline whatis -M $MANPATH -s $section $name} out]} {
 			writeout "no such thing as ${name}($section)" $nick
 		} else {
-			set descr [regexp -inline [string cat $name {[[:alnum:][:blank:][:punct:]]*-}] $out]
-			writeout "[lindex $descr 0] https://man.openbsd.org/$name.$section" $nick
+			set descr [regexp -inline [string cat $name {[[:graph:][:blank:]]*\n}] $out]
+			writeout "[string range [lindex $descr 0] 0 end-1] - https://man.openbsd.org/$name.$section" $nick
 		}
 		
 	}
