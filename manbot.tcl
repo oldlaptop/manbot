@@ -31,24 +31,6 @@ set SYS_NICK "-!-"
 # Sends msg to stdout, reformatted for IRC. If nick is non-empty, invokes rate-
 # limiting logic.
 proc writeout {msg {nick ""}} {
-	# Analogous to POSIX fold(1), returns a string built by inserting a newline
-	# into instr every ncol characters.
-	proc fold {instr {ncol 160}} {
-		set len [string length $instr]
-		set lines_needed [expr $len / $ncol]
-		set ret ""
-		if {$len % $ncol} {
-			# Integer division truncated, account for the partial line
-			incr lines_needed
-		}
-
-		for {set nl 0} {$nl < $lines_needed} {incr nl} {
-			set newline [string range $instr [expr $nl * $ncol] [expr ($nl + 1) * $ncol]]
-			set ret [string cat $ret $newline "\n"]
-		}
-
-		return $ret
-	}
 
 	if {$nick != ""} {
 		# Print with ratelimiting
@@ -71,14 +53,14 @@ proc writeout {msg {nick ""}} {
 
 		if {[lindex $nickentry 0] < $MAXMSG} {
 			set nickentry [list [expr [lindex $nickentry 0] + 1] $ct]
-			puts -nonewline [fold $msg]
+			puts $msg
 		}
 
 		# Commit any changes to the global ratelimiting db
 		dict set nickdb $nick $nickentry
 	} else {
 		# Print without ratelimiting
-		puts -nonewline [fold $msg]
+		puts $msg
 	}
 }
 
