@@ -6,7 +6,7 @@ package require Tcl 8.5
 set BASE_URL "https://man.openbsd.org"
 
 # Passed to whatis -M
-set MANPATH "/usr/ports/infrastructure/man:/usr/X11R6/man:/usr/share/man"
+set MANPATH "/usr/X11R6/man:/usr/share/man"
 
 # Rate-limiting information. Dict in the form {nick {nmsg lastmsg}}, where nmsg
 # is the number of bot-messages the nick has sent during the current
