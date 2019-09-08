@@ -93,7 +93,6 @@ proc sleep {nsec} {
 	vwait awake
 }
 
-puts :)
 while {[gets stdin line] >= 0} {
 	global AUTOREJOIN_PERIOD
 	global SYS_NICK
@@ -124,4 +123,3 @@ while {[gets stdin line] >= 0} {
 		puts "/j"
 	}
 }
-puts :(
