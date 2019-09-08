@@ -2,6 +2,12 @@
 
 package require Tcl 8.5
 
+if {![catch {package require pledge}]} {
+	# for reasons known only to it, tcl seems to first create a
+	# temporary file, then call getsockname on it
+	pledge {stdio proc exec rpath wpath cpath unix} NULL
+}
+
 # Base URL of the man.cgi(8) instance to use
 set BASE_URL "https://man.openbsd.org"
 
